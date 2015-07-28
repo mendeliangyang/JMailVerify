@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+
+
+<deploy>
+    <EmailMaster>liangy@hxsmart.com</EmailMaster>
+    <EmailMasterPwd>liangyang123</EmailMasterPwd>
+    <EmailHost>smtp.chinamail.com.cn</EmailHost>
+    <EmailTitle>验证码</EmailTitle>
+    <EmailVerifyTimeOut>300</EmailVerifyTimeOut>
+</deploy>
