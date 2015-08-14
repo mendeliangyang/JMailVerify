@@ -11,6 +11,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
@@ -22,22 +24,25 @@ import org.w3c.dom.NodeList;
  * @author Administrator
  */
 public class EmailCommon {
-    
+
     public static boolean initialEmailVerify() {
 
         // 1 read deploy
-        return ReadDeployInformation();
-
-        // 2 initial db pool。 替换本地缓存。无须数据库
+        boolean readDeployParamFlag = ReadDeployInformation();
+        //2 start up check validity thread pool to  clear up invalid verify email
+        startUpCheckEmailValidityPool();
+        return readDeployParamFlag;
+        //  initial db pool。 替换本地缓存。无须数据库
         // return initializePool();
     }
-    
+
     public static Set<EmailVerifyModel> emailVerifys = new HashSet<EmailVerifyModel>();
-    
+
     public static String DeployRootPath = null;
     public static SystemSetModel systemSetModel = null;
-    public static ExecutorService emailSendThreadPool = Executors.newFixedThreadPool(7);
-    public static ExecutorService emailPutThreadPool = Executors.newSingleThreadExecutor();
+    public final static ExecutorService emailSendThreadPool = Executors.newFixedThreadPool(7);
+    public final static ExecutorService emailPutThreadPool = Executors.newSingleThreadExecutor();
+    public final static ExecutorService emailCheeckValidtiyPool = Executors.newScheduledThreadPool(1);
 
     /**
      * sync putverifyModel single thread
@@ -47,12 +52,16 @@ public class EmailCommon {
     public static void putVerifyModel(EmailVerifyModel model) {
         emailPutThreadPool.execute(new SyncPutEMailVerifyCode(model));
     }
-    
+
     public static void asyncSendVerifyEmail(EmailVerifyModel mode) {
         emailSendThreadPool.execute(new SendVerifyCodeEmail(mode));
-        
     }
-    
+
+    private static void startUpCheckEmailValidityPool() {
+        ScheduledThreadPoolExecutor exec = new ScheduledThreadPoolExecutor(1);
+        exec.scheduleAtFixedRate(new CheckVerifyEmailValidity(), 10, 10, TimeUnit.MINUTES);
+    }
+
     static Random random = new Random();
 
     /**
@@ -63,23 +72,23 @@ public class EmailCommon {
     public static String getVerifyCode() {
         return String.format("%06d", random.nextInt(999999));
     }
-    
+
     private static String DoGetDelplyRootPath() {
-        
+
         DeployRootPath = EmailSender.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         DeployRootPath = DeployRootPath.substring(1, DeployRootPath.indexOf("WEB-INF"));
         DeployRootPath = new StringBuffer().append(File.separator).append(DeployRootPath).toString();
-        
+
         return DeployRootPath;
     }
-    
+
     public static short overrideParseShort(String strShort) {
         if (strShort != null && !strShort.isEmpty()) {
             return Short.parseShort(strShort);
         }
         return -1;
     }
-    
+
     private static boolean ReadDeployInformation() {
         DocumentBuilderFactory dbFactory = null;
         DocumentBuilder dBuilder = null;
@@ -91,11 +100,11 @@ public class EmailCommon {
             DoGetDelplyRootPath();
             String deployFile = new StringBuffer().append(DeployRootPath).append(File.separator).append("WEB-INF")
                     .append(File.separator).append("deployInformation.xml").toString();
-            
+
             dbFactory = DocumentBuilderFactory.newInstance();
-            
+
             dBuilder = dbFactory.newDocumentBuilder();
-            
+
             doc = dBuilder.parse(deployFile);
 
 //			systemNodelist = doc.getElementsByTagName("systemSet");
@@ -127,7 +136,7 @@ public class EmailCommon {
             systemNodelist = null;
             tempSet = null;
         }
-        
+
     }
 
     // TODO write log
