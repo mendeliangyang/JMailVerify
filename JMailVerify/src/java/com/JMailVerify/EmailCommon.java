@@ -36,7 +36,7 @@ public class EmailCommon {
         // return initializePool();
     }
 
-    public static Set<EmailVerifyModel> emailVerifys = new HashSet<EmailVerifyModel>();
+    public final static Set<EmailVerifyModel> emailVerifys = new HashSet<EmailVerifyModel>();
 
     public static String DeployRootPath = null;
     public static SystemSetModel systemSetModel = null;
@@ -62,7 +62,7 @@ public class EmailCommon {
         exec.scheduleAtFixedRate(new CheckVerifyEmailValidity(), 10, 10, TimeUnit.MINUTES);
     }
 
-    static Random random = new Random();
+    final static Random random = new Random();
 
     /**
      * 生成验证码（6位随机数）

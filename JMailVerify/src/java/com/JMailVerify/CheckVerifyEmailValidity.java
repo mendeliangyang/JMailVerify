@@ -24,7 +24,6 @@ public class CheckVerifyEmailValidity implements Runnable {
                     EmailCommon.emailVerifys.remove(next);
                 }
             }
-
         }
     }
 
